@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bohemia | Calidad que se siente</title>
+    <meta name="description"
+        content="Básicos elevados y piezas de diseño hechas en Argentina. La evolución de tu guardarropa comienza aquí.">
+    <!-- Agregado para arreglar el error 404 de favicon -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <style>
+        :root {
+            --bg-color: #F9F9FB;
+            --text-dark: #1A1A1A;
+            --text-body: #757575;
+            --accent: #E0D7C6;
+            --radius: 16px;
+            --font-title: 'Cormorant Garamond', serif;
+            --font-body: 'Inter', sans-serif;
+            --spacing-lg: 120px;
+            --spacing-md: 80px;
+            --spacing-sm: 40px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: var(--font-title);
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: opacity 0.3s ease;
+        }
+
+        a:hover {
+            opacity: 0.7;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* --- Navbar --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 24px 0;
+            transition: all 0.4s ease;
+            background: rgba(249, 249, 251, 0.1);
+        }
+
+        header.scrolled {
+            background: rgba(249, 249, 251, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 16px 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-title);
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: var(--text-dark);
+        }
+
+        .nav-links {
+            display: none;
+            gap: 40px;
+        }
+
+        @media (min-width: 768px) {
+            .nav-links {
+                display: flex;
+            }
+        }
+
+        .nav-links a {
+            font-size: 0.95rem;
+            font-weight: 400;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--text-dark);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-icons i {
+            width: 20px;
+            height: 20px;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-icons i:hover {
+            transform: scale(1.1);
+        }
+
+        /* --- Tooltip --- */
+        .mobile-menu-btn {
+            display: flex;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-menu-btn {
+                display: none;
+            }
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 100vh;
+            min-height: 700px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+            padding-top: 80px;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            bottom: 24px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .hero-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.05);
+            animation: subtleZoom 10s ease-out forwards;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(249, 249, 251, 0.1) 0%, rgba(249, 249, 251, 0.85) 100%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            padding: 48px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: var(--radius);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            /* entry animation */
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeUp 1s ease 0.2s forwards;
+            margin: 0 24px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .hero h1 {
+                font-size: 4.5rem;
+            }
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            color: var(--text-dark);
+            opacity: 0.9;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--text-dark);
+            color: #fff;
+            padding: 18px 36px;
+            border-radius: 100px;
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            opacity: 1;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(26, 26, 26, 0.15);
+            background-color: #333;
+        }
+
+        /* --- Fade In Classes --- */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1s cubic-bezier(0.165, 0.84, 0.44, 1), transform 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Categories (Inventario) --- */
+        .categories {
+            padding: var(--spacing-lg) 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            font-family: var(--font-title);
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            font-style: italic;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .card {
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            aspect-ratio: 3/4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .card:hover img {
+            transform: scale(1.05);
+        }
+
+        .card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 32px 24px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+            color: #fff;
+        }
+
+        .card h3 {
+            color: #fff;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateY(10px);
+            opacity: 0.8;
+            transition: all 0.4s ease;
+        }
+
+        .card:hover p {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* --- About Section --- */
+        .about {
+            padding: var(--spacing-lg) 0;
+            background-color: #fff;
+            text-align: center;
+        }
+
+        .about-content {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .about h2 {
+            font-size: 3rem;
+            margin-bottom: 32px;
+        }
+
+        .about p {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--text-body);
+        }
+
+        /* --- Testimonials --- */
+        .testimonials {
+            padding: var(--spacing-lg) 0;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .testimonials-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }        .testimonial-card {
+            background-color: var(--text-dark);
+            padding: 48px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.5s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .testimonial-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background-color: var(--accent);
+            border-radius: var(--radius) 0 0 var(--radius);
+            z-index: -1;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .quote-icon {
+            color: var(--accent);
+            opacity: 0.8;
+            margin-bottom: 24px;
+            width: 32px;
+            height: 32px;
+        }
+
+        .testimonial-text {
+            font-family: var(--font-title);
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 32px;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .testimonial-author {
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* --- Location --- */
+        .location-wrapper {
+            padding: 0 24px var(--spacing-lg) 24px;
+            max-width: 1328px;
+            margin: 0 auto;
+        }
+
+        .location {
+            background-color: var(--text-dark);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: var(--spacing-lg) 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .location::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top right, rgba(224, 215, 198, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .location-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 0 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .location h2 {
+            color: #fff;
+            font-size: 3rem;
+            margin-bottom: 48px;
+        }
+
+        .location-info {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            margin-bottom: 56px;
+        }
+
+        @media (min-width: 768px) {
+            .location-info {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .info-col {
+            padding: 32px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.3s ease;
+        }
+
+        .info-col:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .info-col h4 {
+            color: var(--accent);
+            margin-bottom: 24px;
+            font-family: var(--font-body);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 0.8rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .info-item i {
+            color: var(--accent);
+            width: 18px;
+            height: 18px;
+            margin-top: 4px;
+            flex-shrink: 0;
+        }
+
+        .info-item p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+        }
+
+        .info-col .sub-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            margin-top: 24px;
+            text-align: left;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 16px;
+        }
+
+        .location .note {
+            font-family: var(--font-title);
+            font-size: 1.6rem;
+            font-style: italic;
+            margin-top: 56px;
+            color: var(--accent);
+            opacity: 0.9;
+        }
+
+        .btn-light {
+            background-color: #fff;
+            color: var(--text-dark);
+        }
+
+        .btn-light:hover {
+            background-color: var(--accent);
+            color: var(--text-dark);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Footer --- */
+        footer {
+            padding: 80px 0 40px 0;
+            background-color: #fff;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 48px;
+            margin-bottom: 80px;
+        }
+
+        @media (min-width: 768px) {
+            .footer-grid {
+                grid-template-columns: 2fr 1fr 1fr;
+            }
+        }
+
+        .footer-brand {
+            max-width: 320px;
+        }
+
+        .footer-brand .logo {
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .footer-col h4 {
+            font-family: var(--font-title);
+            font-size: 1.25rem;
+            margin-bottom: 24px;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            color: var(--text-body);
+            font-size: 0.95rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-dark);
+        }
+
+        /* Newsletter removido */
+
+        .footer-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 32px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 0.85rem;
+            gap: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .footer-bottom {
+                flex-direction: row;
+            }
+        }
+
+        .social-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .social-links a {
+            color: var(--text-body);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: var(--text-dark);
+            color: #fff;
+        }
+
+        .social-links i {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Keyframes */
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes subtleZoom {
+            to {
+                transform: scale(1);
+            }
+        }
+
+        /* --- Filters & New UI --- */
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .filter-btn {
+            background: #fff;
+            border: 1px solid #EBEBEB;
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--text-body);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--text-dark);
+            color: #fff;
+            border-color: var(--text-dark);
+        }
+
+        /* --- Modals --- */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 24px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.1);
+        }
+
+        @media (min-width: 768px) {
+            .modal-content {
+                flex-direction: row;
+            }
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .modal-close:hover {
+            background: #eee;
+        }
+
+        .modal-img {
+            flex: 1;
+            min-height: 300px;
+            background: #f5f5f5;
+        }
+
+        .modal-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-info {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-info h3 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .modal-info .price {
+            font-size: 1.25rem;
+            color: var(--text-dark);
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .modal-info .desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            color: var(--text-body);
+        }
+
+        /* --- Cart Modal --- */
+        .cart-modal-content {
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            padding: 32px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item h4 {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .cart-item .price {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .cart-remove {
+            color: #ff4757;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .cart-total {
+            margin-top: 24px;
+            font-size: 1.5rem;
+            font-family: var(--font-title);
+            display: flex;
+            justify-content: space-between;
+            padding-top: 24px;
+            border-top: 2px solid #eee;
+        }
+
+        /* --- Hero Carousel --- */
+        .hero-bg img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out, transform 10s ease-out;
+            transform: scale(1.05);
+        }
+
+        .hero-bg img.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        /* --- Mobile Menu --- */
+        .mobile-menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(249, 249, 251, 0.98);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            text-align: center;
+        }
+
+        .mobile-nav-links a {
+            font-size: 2.5rem;
+            font-family: var(--font-title);
+            color: var(--text-dark);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .mobile-menu-overlay.active .mobile-nav-links a {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .mobile-menu-overlay.active .mobile-nav-links a:nth-child(1) { transition-delay: 0.1s; }
+        .mobile-menu-overlay.active .mobile-nav-links a:nth-child(2) { transition-delay: 0.2s; }
+        .mobile-menu-overlay.active .mobile-nav-links a:nth-child(3) { transition-delay: 0.3s; }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header id="navbar">
+        <div class="container nav">
+            <a href="#" class="logo">Bohemia.</a>
+            <div class="nav-links">
+                <a href="#coleccion">Colección</a>
+                <a href="#sucursales">Sucursales</a>
+                <a href="#nosotros">Nosotros</a>
+            </div>
+            <div class="nav-icons">
+                <a href="https://instagram.com" target="_blank" aria-label="Instagram"><i
+                        data-lucide="instagram"></i></a>
+                <a href="https://wa.me/5492915346106" target="_blank" aria-label="WhatsApp"><i
+                        data-lucide="message-circle"></i></a>
+                <a href="https://facebook.com" target="_blank" aria-label="Facebook"><i data-lucide="facebook"></i></a>
+                <button id="cart-icon-btn" style="background:none;border:none;cursor:pointer;position:relative;color:var(--text-dark);">
+                    <i data-lucide="shopping-bag"></i>
+                    <span id="cart-badge" style="position:absolute;top:-6px;right:-10px;background:var(--text-dark);color:#fff;font-size:0.7rem;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-body);">0</span>
+                </button>
+                <button class="mobile-menu-btn" aria-label="Abrir Menú" style="background:none;border:none;cursor:pointer;color:var(--text-dark);align-items:center;padding:4px;">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobile-menu">
+        <button class="modal-close" style="top: 24px; right: 24px;" onclick="closeMobileMenu()"><i data-lucide="x"></i></button>
+        <div class="mobile-nav-links">
+            <a href="#coleccion" onclick="closeMobileMenu()">Colección</a>
+            <a href="#sucursales" onclick="closeMobileMenu()">Sucursales</a>
+            <a href="#nosotros" onclick="closeMobileMenu()">Nosotros</a>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-bg" id="hero-carousel">
+            <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1920&auto=format&fit=crop" class="active" alt="Hero 1">
+            <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1920&auto=format&fit=crop" alt="Hero 2">
+            <img src="https://images.unsplash.com/photo-1529139574466-a30ca73ce160?q=80&w=1920&auto=format&fit=crop" alt="Hero 3">
+            <div class="hero-overlay" style="background: linear-gradient(to bottom, rgba(249, 249, 251, 0.3) 0%, rgba(249, 249, 251, 0.85) 100%);"></div>
+        </div>
+        <div class="hero-content">
+            <h1 id="hero-title">BOHEMIA: Ropa a<br>precios increíbles.</h1>
+            <p id="hero-subtitle">Tu estilo, tu lugar. Encontrá las últimas tendencias con la mejor relación
+                calidad-precio en Bahía Blanca
+                y Monte Hermoso.</p>
+            <a href="#coleccion" class="btn">Ver Catálogo</a>
+        </div>
+    </section>
+
+    <!-- Categories -->
+    <section id="coleccion" class="categories container">
+        <div class="section-header fade-in">
+            <h2>Inventario</h2>
+            <p>"Curaduría consciente. Cada pieza es seleccionada por su materialidad y versatilidad."</p>
+        </div>
+
+        <div class="products-controls fade-in" style="margin-bottom: 32px; display: flex; flex-direction: column;">
+            <input type="text" id="search-input" placeholder="Buscar productos..." style="padding: 12px 20px; border-radius: 8px; border: 1px solid #EBEBEB; width: 100%; max-width: 320px; font-family: var(--font-body); font-size: 0.95rem; outline: none; transition: border-color 0.3s ease; align-self: flex-end;">
+            
+            <div class="filters" id="category-filters">
+                <button class="filter-btn active" data-category="">Todos</button>
+                <button class="filter-btn" data-category="Lo Nuevo">Lo Nuevo</button>
+                <button class="filter-btn" data-category="Best Sellers">Best Sellers</button>
+                <button class="filter-btn" data-category="Ofertas">Ofertas</button>
+            </div>
+        </div>
+
+        <div class="grid" id="products-grid">
+            <!-- Los productos se inyectarán aquí dinámicamente -->
+        </div>
+
+        <div style="text-align: center; margin-top: 48px;" class="fade-in" id="load-more-container">
+            <button id="load-more-btn" class="btn" style="display: none;">Ver más productos</button>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section id="nosotros" class="about fade-in">
+        <div class="container">
+            <div class="about-content">
+                <h2>Más que una tienda, una comunidad.</h2>
+                <p id="about-text">Con más de 120 mil seguidores, en Bohemia nos apasiona acercarte la moda que buscás a
+                    precios que no
+                    podés creer. Nos esforzamos día a día para que renovar tu guardarropa sea una experiencia cercana y
+                    real.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials container">
+        <div class="testimonials-grid">
+            <div class="testimonial-card fade-in">
+                <i data-lucide="quote" class="quote-icon"></i>
+                <p class="testimonial-text">"La atención por WhatsApp me ayudó con el talle. Calidad increíble. Era
+                    exactamente el nivel de básicos que estaba buscando."</p>
+                <div class="testimonial-author">– Sofía R.</div>
+            </div>
+            <div class="testimonial-card fade-in" style="transition-delay: 0.2s;">
+                <i data-lucide="quote" class="quote-icon"></i>
+                <p class="testimonial-text">"Buscaba algo profesional y cómodo para el día a día. El packaging es un 10.
+                    Felicitaciones por el trabajo."</p>
+                <div class="testimonial-author">– Julián P.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location -->
+    <div class="location-wrapper">
+        <section id="sucursales" class="location fade-in">
+            <div class="location-content">
+                <h2>Nuestros Puntos de Venta</h2>
+
+                <div class="location-info">
+                    <div class="info-col">
+                        <h4>Direcciones</h4>
+                        <div class="info-item">
+                            <i data-lucide="map-pin"></i>
+                            <p>O'HIGGINS 215 (Centro, Bahía Blanca)</p>
+                        </div>
+                        <div class="info-item">
+                            <i data-lucide="map-pin"></i>
+                            <p>CHICLANA 1665 (V. Mitre, Bahía Blanca)</p>
+                        </div>
+                        <div class="info-item">
+                            <i data-lucide="map-pin"></i>
+                            <p>DORREGO 256 L1 (Monte Hermoso)</p>
+                        </div>
+                        <p class="sub-text">Casa Central: Chiclana 1665, Bahía Blanca, Buenos Aires.</p>
+                    </div>
+                    <div class="info-col">
+                        <h4>Horarios</h4>
+                        <div class="info-item">
+                            <i data-lucide="clock"></i>
+                            <p>Lunes a Viernes de 10:00 a 20:00 hs</p>
+                        </div>
+                        <div class="info-item">
+                            <i data-lucide="calendar"></i>
+                            <p>Sábados de 10:00 a 14:00 hs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="https://maps.google.com/?q=Chiclana+1665,+Bahía+Blanca,+Buenos+Aires" target="_blank"
+                    class="btn btn-light">Ver en Google Maps</a>
+                <p class="note">"Vení a probarte nuestra colección."</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand fade-in">
+                    <a href="#" class="logo">Bohemia.</a>
+                    <p>Básicos elevados fabricados éticamente en Argentina.</p>
+                </div>
+
+                <div class="footer-col fade-in" style="transition-delay: 0.1s;">
+                    <h4>Navegación</h4>
+                    <ul class="footer-links">
+                        <li><a href="#coleccion">Colección</a></li>
+                        <li><a href="#sucursales">Sucursales</a></li>
+                        <li><a href="#nosotros">Nosotros</a></li>
+                        <li><a href="#">Guía de Talles</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col fade-in" style="transition-delay: 0.2s;">
+                    <h4>Atención al Cliente</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Contacto / WhatsApp</a></li>
+                        <li><a href="#">Envíos y Devoluciones</a></li>
+                        <li><a href="#">Preguntas Frecuentes</a></li>
+                        <li><a href="#">Términos y Condiciones</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Bohemia Store. Envíos a todo el país. Todos los derechos reservados.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Instagram"><i data-lucide="instagram"></i></a>
+                    <a href="#" aria-label="Facebook"><i data-lucide="facebook"></i></a>
+                    <a href="#" aria-label="Twitter"><i data-lucide="twitter"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Quick View Modal -->
+    <div class="modal-overlay" id="quick-view-modal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal('quick-view-modal')"><i data-lucide="x"></i></button>
+            <div class="modal-img">
+                <img id="qv-img" src="" alt="Product">
+            </div>
+            <div class="modal-info">
+                <h3 id="qv-title">Producto</h3>
+                <div class="price" id="qv-price">$0</div>
+                <div class="desc" id="qv-desc">Descripción del producto.</div>
+                
+                <button class="btn" id="qv-add-btn" style="background-color: var(--text-dark); color: #fff; width: 100%;"><i data-lucide="shopping-bag" style="width:18px; margin-right:8px;"></i> Agregar al Carrito</button>
+                <button class="btn btn-light" id="qv-wp-btn" style="margin-top: 12px; width: 100%; border: 1px solid #EBEBEB; display: flex;"><i data-lucide="message-circle" style="width:18px; margin-right:8px;"></i> Comprar Directo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="modal-overlay cart-modal" id="cart-modal">
+        <div class="modal-content cart-modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal('cart-modal')"><i data-lucide="x"></i></button>
+            <h2 style="margin-bottom: 24px; font-family: var(--font-title); font-size: 2rem;">Tu Carrito</h2>
+            
+            <div id="cart-items" style="flex:1; overflow-y:auto; margin-bottom: 24px;">
+                <!-- Items incrustados dinamicamente -->
+            </div>
+            
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cart-total-price">$0</span>
+            </div>
+            
+            <button class="btn" id="cart-checkout-btn" style="width: 100%; margin-top: 32px; background-color: #25D366; color: #fff; border: none; display: flex; gap: 8px; justify-content: center;"><i data-lucide="message-circle" style="width: 18px;"></i> Enviar Pedido por WhatsApp</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Sticky Navbar with Glassmorphism
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for scroll fade-in animations
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // Unobserve to animate only once
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(element => {
+            observer.observe(element);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    const headerOffset = 80;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }
+            });
+        });
+
+        // Supabase Integration
+        const SUPABASE_URL = 'https://xbmlpqkjmyldamhtzsgu.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibWxwcWtqbXlsZGFtaHR6c2d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NDQ2NjEsImV4cCI6MjA4OTUyMDY2MX0._NvGgoP4bbLKRm8QJKN0mY985C-SRIttbqMKyaMPj20';
+
+        // ---------------------------------------------------------
+        // CAMBIAR ESTE ID POR EL DE LA EMPRESA QUE QUIERAS MOSTRAR
+        // ---------------------------------------------------------
+        const empresaId = 1;
+
+        let supabaseClient;
+
+        // --- Estado Global ---
+        let currentPage = 0;
+        const limit = 10;
+        let currentSearch = '';
+        let currentCategory = '';
+        let cart = JSON.parse(sessionStorage.getItem('bohemia_cart')) || [];
+        let allLoadedProducts = []; // Para tener referencia rápida al abrir el modal
+
+        // Inicializar Carrito y UI
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const itemsContainer = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total-price');
+            
+            let total = 0;
+            itemsContainer.innerHTML = '';
+            
+            badge.textContent = cart.length;
+            
+            if(cart.length === 0) {
+                itemsContainer.innerHTML = '<p style="color:var(--text-body); text-align:center; padding: 24px 0;">Tu carrito está vacío.</p>';
+            } else {
+                cart.forEach((item, index) => {
+                    total += Number(item.precio);
+                    const precioFormateado = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.precio);
+                    itemsContainer.innerHTML += `
+                        <div class="cart-item">
+                            <div>
+                                <h4>${item.nombre}</h4>
+                                <div class="price">${precioFormateado}</div>
+                            </div>
+                            <button class="cart-remove" onclick="removeFromCart(${index})"><i data-lucide="trash-2" style="width:18px;"></i></button>
+                        </div>
+                    `;
+                });
+            }
+            
+            totalEl.textContent = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(total);
+            lucide.createIcons();
+            sessionStorage.setItem('bohemia_cart', JSON.stringify(cart));
+        }
+
+        window.removeFromCart = function(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function addToCart(producto) {
+            cart.push(producto);
+            updateCartUI();
+            closeModal('quick-view-modal');
+            
+            // Feedback visual simple
+            const badge = document.getElementById('cart-badge');
+            badge.style.transform = 'scale(1.5)';
+            setTimeout(() => badge.style.transform = 'scale(1)', 200);
+        }
+
+        window.addToCartById = function(productoId) {
+            const prod = allLoadedProducts.find(p => String(p.id) === String(productoId));
+            if(prod) {
+                cart.push(prod);
+                updateCartUI();
+                
+                // Feedback visual simple
+                const badge = document.getElementById('cart-badge');
+                badge.style.transform = 'scale(1.5)';
+                setTimeout(() => badge.style.transform = 'scale(1)', 200);
+            }
+        }
+
+        // --- Manejo de Modales ---
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.classList.add('modal-open');
+        }
+
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+
+        window.closeMobileMenu = function() {
+            document.getElementById('mobile-menu').classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+
+        // Click fuera del modal para cerrar
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if(e.target === this) closeModal(this.id);
+            });
+        });
+
+        // Hero Carousel Logic
+        function initCarousel() {
+            const images = document.querySelectorAll('#hero-carousel img');
+            if(images.length <= 1) return;
+            let current = 0;
+            setInterval(() => {
+                images[current].classList.remove('active');
+                current = (current + 1) % images.length;
+                images[current].classList.add('active');
+            }, 6000); // 6 seconds fade
+        }
+
+        // Abrir detalle del producto
+        window.openQuickView = function(productoId) {
+            const prod = allLoadedProducts.find(p => String(p.id) === String(productoId));
+            if(!prod) return;
+            
+            const imgUrl = prod.imagen_url || 'https://via.placeholder.com/400x533?text=Sin+Imagen';
+            const precioFormateado = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(prod.precio);
+            
+            document.getElementById('qv-img').src = imgUrl;
+            document.getElementById('qv-title').textContent = prod.nombre;
+            document.getElementById('qv-price').textContent = precioFormateado;
+            // Usamos descripción si hay, o un genérico
+            document.getElementById('qv-desc').innerHTML = prod.descripcion ? prod.descripcion.replace(/\n/g, '<br>') : 'Básico elevado fabricado en Argentina.';
+            
+            document.getElementById('qv-add-btn').onclick = () => addToCart(prod);
+            
+            const waMsg = encodeURIComponent(`Hola! Quiero comprar: ${prod.nombre} (${precioFormateado})`);
+            document.getElementById('qv-wp-btn').onclick = () => window.open(`https://wa.me/5492915346106?text=${waMsg}`, '_blank');
+            
+            openModal('quick-view-modal');
+        }
+
+        async function fetchEmpresaData() {
+            try {
+                // Configurar cliente una vez que DOM y los scripts defer se han cargado
+                if (!supabaseClient && window.supabase) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+
+                // Fetch company info
+                const { data: empresaData, error: empresaError } = await supabaseClient
+                    .from('empresas')
+                    .select('*')
+                    .eq('id', empresaId)
+                    .single();
+
+                if (empresaError && empresaError.code !== 'PGRST116') {
+                    console.error("Error cargando empresa:", empresaError);
+                }
+
+                if (empresaData) {
+                    // Update DOM Elements
+                    if (empresaData.nombre) {
+                        document.title = empresaData.nombre + " | Calidad que se siente";
+                        document.querySelectorAll('.logo').forEach(el => el.textContent = empresaData.nombre + ".");
+                    }
+                    if (empresaData.hero_title) {
+                        document.getElementById('hero-title').innerHTML = empresaData.hero_title.replace(/\n/g, '<br>');
+                    }
+                    if (empresaData.hero_subtitle) {
+                        document.getElementById('hero-subtitle').textContent = empresaData.hero_subtitle;
+                    }
+                    if (empresaData.about_text) {
+                        document.getElementById('about-text').textContent = empresaData.about_text;
+                    }
+                }
+
+                // Cargar los productos por primera vez
+                await loadProducts(true);
+
+            } catch (err) {
+                console.error("Error de inicialización:", err);
+            }
+        }
+
+        async function loadProducts(reset = false) {
+            if (reset) {
+                currentPage = 0;
+                document.getElementById('products-grid').innerHTML = '';
+                allLoadedProducts = [];
+            }
+
+            try {
+                const from = currentPage * limit;
+                const to = from + limit - 1;
+
+                let query = supabaseClient
+                    .from('productos')
+                    .select('*', { count: 'exact' })
+                    .eq('empresa_id', empresaId)
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
+
+                if (currentSearch) {
+                    query = query.ilike('nombre', `%${currentSearch}%`);
+                }
+                if (currentCategory) {
+                    query = query.eq('categoria', currentCategory);
+                }
+
+                const { data: productosData, error: productosError, count } = await query;
+
+                if (productosError) {
+                    console.error("Error cargando productos:", productosError);
+                    return;
+                }
+
+                const grid = document.getElementById('products-grid');
+                const loadMoreBtn = document.getElementById('load-more-btn');
+
+                if (productosData && productosData.length > 0) {
+                    allLoadedProducts = [...allLoadedProducts, ...productosData];
+                    
+                    productosData.forEach((producto, index) => {
+                        const delay = (index % limit) * 0.1;
+                        // URL fallback en caso de que no haya imagen
+                        const imgUrl = producto.imagen_url || 'https://via.placeholder.com/400x533?text=Sin+Imagen';
+
+                        // Parsear precio
+                        const precioFormateado = new Intl.NumberFormat('es-AR', {
+                            style: 'currency',
+                            currency: 'ARS'
+                        }).format(producto.precio);
+
+                        const cardHTML = `
+                            <div class="card fade-in visible" style="transition-delay: ${delay}s; cursor: pointer; display: flex; flex-direction: column;" onclick="openQuickView('${producto.id}')">
+                                <img src="${imgUrl}" alt="${producto.nombre}" onerror="this.src='https://via.placeholder.com/400x533?text=Sin+Imagen'">
+                                <div class="card-content" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end;">
+                                    <h3>${producto.nombre}</h3>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                                        <p style="margin: 0; padding: 0;">${producto.categoria || ''} - ${precioFormateado}</p>
+                                        <button onclick="event.stopPropagation(); window.addToCartById('${producto.id}')" aria-label="Añadir al carrito" style="background: var(--text-dark); color: #fff; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;"><i data-lucide="plus" style="width: 16px;"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        grid.insertAdjacentHTML('beforeend', cardHTML);
+                        // Make sure Lucide icons in new cards get generated
+                        lucide.createIcons();
+                    });
+
+                    // Mostrar u ocultar botón de cargar más
+                    if ((to + 1) < count) {
+                        loadMoreBtn.style.display = 'inline-flex';
+                    } else {
+                        loadMoreBtn.style.display = 'none';
+                    }
+
+                    currentPage++;
+                } else {
+                    if (reset) {
+                        grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">No se encontraron productos.</p>';
+                    }
+                    loadMoreBtn.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Error al cargar productos:", err);
+            }
+        }
+
+        // Call on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initCarousel();
+            updateCartUI();
+            
+            // Mobile Menu
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            if(mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    document.getElementById('mobile-menu').classList.add('active');
+                    document.body.classList.add('modal-open');
+                });
+            }
+            
+            // Wait for dependencies (in case of defer delays)
+            if(!supabaseClient && window.supabase) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+            fetchEmpresaData();
+
+            // Buscador
+            const searchInput = document.getElementById('search-input');
+            let searchTimeout;
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        currentSearch = e.target.value.trim();
+                        loadProducts(true);
+                    }, 500); 
+                });
+            }
+
+            // Filtros de categoría
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentCategory = e.target.getAttribute('data-category');
+                    loadProducts(true);
+                });
+            });
+
+            // Cart Checkout
+            document.getElementById('cart-checkout-btn').addEventListener('click', () => {
+                if(cart.length === 0) return;
+                
+                let text = "Hola! Quiero encargar los siguientes productos:%0A%0A";
+                let total = 0;
+                cart.forEach(item => {
+                    const price = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(item.precio);
+                    text += `- ${item.nombre} (${price})%0A`;
+                    total += Number(item.precio);
+                });
+                const totalFormat = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(total);
+                text += `%0A*Total: ${totalFormat}*`;
+                
+                window.open(`https://wa.me/5492915346106?text=${text}`, '_blank');
+            });
+
+            // Abrir Carrito
+            document.getElementById('cart-icon-btn').addEventListener('click', () => {
+                openModal('cart-modal');
+            });
+
+            // Botón Cargar Más
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', () => loadProducts(false));
+            }
+        });
+
+    </script>
+</body>
+
+</html>
